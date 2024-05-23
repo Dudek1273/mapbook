@@ -38,5 +38,14 @@ def add_users(users: list) -> None:
     users.append(new_user)
 
 
-add_users(data_of_users)
-read(data_of_users)
+# add_users(data_of_users)
+# read(data_of_users)
+def delete_user(users: list) -> None:
+    name: str = input('Enter a name of user to remove: ')
+    for user in users:
+        if user['name'] == name:
+            users.remove(user)
+
+
+# delete_user(data_of_users)
+# read(data_of_users)
