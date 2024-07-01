@@ -1,259 +1,112 @@
-import sqlite3
-from getpass import getpass
+from FunkcjeFirmy import show_companies, add_company, remove_company, update_company, companies_map
+from FunkcjeKlienci import show_clients, add_client, remove_client, update_client, clients_map
+from FunkcjePracownicy import show_workers, add_worker, remove_worker, update_worker, workers_map, \
+    show_animals_under_care
+from Lista import companies, clients, workers, animals
 
 
-def create_tables():
-    conn = sqlite3.connect('vet_clinic.db')
-    c = conn.cursor()
+def logowanie():
+    correct_login = "klinika"
+    correct_password = "1234"
+    logowanie = False
 
-    c.execute('''CREATE TABLE IF NOT EXISTS companies (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    address TEXT NOT NULL)''')
+    while not logowanie:
+        login = input("Wprowadź login: ")
+        password = input("Wprowadź hasło: ")
 
-    c.execute('''CREATE TABLE IF NOT EXISTS employees (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    company_id INTEGER,
-                    name TEXT NOT NULL,
-                    position TEXT NOT NULL,
-                    FOREIGN KEY (company_id) REFERENCES companies (id))''')
-
-    c.execute('''CREATE TABLE IF NOT EXISTS clients (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    address TEXT NOT NULL)''')
-
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT NOT NULL,
-                    password TEXT NOT NULL)''')
-
-    conn.commit()
-    conn.close()
-
-
-def register_user():
-    username = input("Podaj nazwę użytkownika: ")
-    password = getpass("Podaj hasło: ")
-
-    conn = sqlite3.connect('vet_clinic.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
-    conn.commit()
-    conn.close()
-
-    print("Rejestracja zakończona sukcesem.")
-    main_menu()
-
-
-def login():
-    username = input("Podaj nazwę użytkownika: ")
-    password = getpass("Podaj hasło: ")
-
-    conn = sqlite3.connect('vet_clinic.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
-    user = c.fetchone()
-    conn.close()
-
-    if user:
-        print("Logowanie zakończone sukcesem.")
-        user_menu()
-    else:
-        print("Nieprawidłowa nazwa użytkownika lub hasło.")
-        main_menu()
-
-
-def manage_companies():
-    while True:
-        print("\nZarządzanie firmami:")
-        print("1. Dodaj firmę")
-        print("2. Wyświetl firmy")
-        print("3. Aktualizuj firmę")
-        print("4. Usuń firmę")
-        print("0. Powrót")
-
-        choice = int(input("Wybierz opcję: "))
-
-        conn = sqlite3.connect('vet_clinic.db')
-        c = conn.cursor()
-
-        if choice == 1:
-            name = input("Podaj nazwę firmy: ")
-            address = input("Podaj adres firmy: ")
-            c.execute('INSERT INTO companies (name, address) VALUES (?, ?)', (name, address))
-            conn.commit()
-            print("Firma została dodana.")
-
-        elif choice == 2:
-            c.execute('SELECT * FROM companies')
-            companies = c.fetchall()
-            for company in companies:
-                print(company)
-
-        elif choice == 3:
-            company_id = int(input("Podaj ID firmy do aktualizacji: "))
-            name = input("Podaj nową nazwę firmy: ")
-            address = input("Podaj nowy adres firmy: ")
-            c.execute('UPDATE companies SET name = ?, address = ? WHERE id = ?', (name, address, company_id))
-            conn.commit()
-            print("Firma została zaktualizowana.")
-
-        elif choice == 4:
-            company_id = int(input("Podaj ID firmy do usunięcia: "))
-            c.execute('DELETE FROM companies WHERE id = ?', (company_id,))
-            conn.commit()
-            print("Firma została usunięta.")
-
-        elif choice == 0:
-            conn.close()
-            break
-
+        if login == correct_login and password == correct_password:
+            print("Pomyślnie zalogowano.")
+            logowanie = True
         else:
-            print("Nieprawidłowy wybór. Spróbuj ponownie.")
+            print("Niepoprawny login lub hasło.")
+    return logowanie
 
 
-def manage_employees():
-    while True:
-        print("\nZarządzanie pracownikami:")
-        print("1. Dodaj pracownika")
-        print("2. Wyświetl pracowników")
-        print("3. Aktualizuj pracownika")
-        print("4. Usuń pracownika")
-        print("0. Powrót")
-
-        choice = int(input("Wybierz opcję: "))
-
-        conn = sqlite3.connect('vet_clinic.db')
-        c = conn.cursor()
-
-        if choice == 1:
-            company_id = int(input("Podaj ID firmy: "))
-            name = input("Podaj imię i nazwisko pracownika: ")
-            position = input("Podaj stanowisko pracownika: ")
-            c.execute('INSERT INTO employees (company_id, name, position) VALUES (?, ?, ?)',
-                      (company_id, name, position))
-            conn.commit()
-            print("Pracownik został dodany.")
-
-        elif choice == 2:
-            c.execute('SELECT * FROM employees')
-            employees = c.fetchall()
-            for employee in employees:
-                print(employee)
-
-        elif choice == 3:
-            employee_id = int(input("Podaj ID pracownika do aktualizacji: "))
-            name = input("Podaj nowe imię i nazwisko pracownika: ")
-            position = input("Podaj nowe stanowisko pracownika: ")
-            c.execute('UPDATE employees SET name = ?, position = ? WHERE id = ?', (name, position, employee_id))
-            conn.commit()
-            print("Pracownik został zaktualizowany.")
-
-        elif choice == 4:
-            employee_id = int(input("Podaj ID pracownika do usunięcia: "))
-            c.execute('DELETE FROM employees WHERE id = ?', (employee_id,))
-            conn.commit()
-            print("Pracownik został usunięty.")
-
-        elif choice == 0:
-            conn.close()
-            break
-
-        else:
-            print("Nieprawidłowy wybór. Spróbuj ponownie.")
-
-
-def manage_clients():
-    while True:
-        print("\nZarządzanie klientami:")
-        print("1. Dodaj klienta")
-        print("2. Wyświetl klientów")
-        print("3. Aktualizuj klienta")
-        print("4. Usuń klienta")
-        print("0. Powrót")
-
-        choice = int(input("Wybierz opcję: "))
-
-        conn = sqlite3.connect('vet_clinic.db')
-        c = conn.cursor()
-
-        if choice == 1:
-            name = input("Podaj imię i nazwisko klienta: ")
-            address = input("Podaj adres klienta: ")
-            c.execute('INSERT INTO clients (name, address) VALUES (?, ?)', (name, address))
-            conn.commit()
-            print("Klient został dodany.")
-
-        elif choice == 2:
-            c.execute('SELECT * FROM clients')
-            clients = c.fetchall()
-            for client in clients:
-                print(client)
-
-        elif choice == 3:
-            client_id = int(input("Podaj ID klienta do aktualizacji: "))
-            name = input("Podaj nowe imię i nazwisko klienta: ")
-            address = input("Podaj nowy adres klienta: ")
-            c.execute('UPDATE clients SET name = ?, address = ? WHERE id = ?', (name, address, client_id))
-            conn.commit()
-            print("Klient został zaktualizowany.")
-
-        elif choice == 4:
-            client_id = int(input("Podaj ID klienta do usunięcia: "))
-            c.execute('DELETE FROM clients WHERE id = ?', (client_id,))
-            conn.commit()
-            print("Klient został usunięty.")
-
-        elif choice == 0:
-            conn.close()
-            break
-
-        else:
-            print("Nieprawidłowy wybór. Spróbuj ponownie.")
-
-
-def main_menu():
-    while True:
-        print("\nMenu:")
-        print("1. Zarejestruj użytkownika")
-        print("2. Zaloguj się")
-        print("0. Wyjdź")
-
-        choice = int(input("Wybierz opcję: "))
-
-        if choice == 1:
-            register_user()
-        elif choice == 2:
-            login()
-        elif choice == 0:
-            break
-        else:
-            print("Nieprawidłowy wybór. Spróbuj ponownie.")
-
-
-def user_menu():
-    while True:
-        print("\nMenu użytkownika:")
-        print("1. Zarządzaj firmami")
-        print("2. Zarządzaj pracownikami")
-        print("3. Zarządzaj klientami")
-        print("0. Wyloguj się")
-
-        choice = int(input("Wybierz opcję: "))
-
-        if choice == 1:
-            manage_companies()
-        elif choice == 2:
-            manage_employees()
-        elif choice == 3:
-            manage_clients()
-        elif choice == 0:
-            break
-        else:
-            print("Nieprawidłowy wybór. Spróbuj ponownie.")
-
-
-if __name__ == "__main__":
-    create_tables()
-    main_menu()1
+if logowanie():
+    if __name__ == '__main__':
+        print("Witaj w systemie zarządzania klinikami weterynaryjnymi.")
+        while True:
+            print("Menu:")
+            print("0. Zakończ pracę")
+            print("1. Kliniki weterynaryjne")
+            print("2. Klienci")
+            print("3. Pracownicy")
+            menu_option = input("Wybierz opcję: ")
+            if menu_option == '0':
+                break
+            elif menu_option == '1':
+                while True:
+                    print("0. Powrót do menu głównego")
+                    print("1. Wyświetl listę klinik weterynaryjnych")
+                    print("2. Dodaj klinike do listy")
+                    print("3. Usuń klinike z listy")
+                    print("4. Aktualizuj dane kliniki")
+                    print("5. Wyświetl lokalizację wszystkich klinik na mapie")
+                    opcja = input("Wybierz opcję: ")
+                    if opcja == '0':
+                        break
+                    elif opcja == '1':
+                        show_companies(companies)
+                    elif opcja == '2':
+                        add_company(companies)
+                        show_companies(companies)
+                    elif opcja == '3':
+                        remove_company(companies)
+                        show_companies(companies)
+                    elif opcja == '4':
+                        update_company(companies)
+                        show_companies(companies)
+                    elif opcja == '5':
+                        companies_map(companies)
+                    else:
+                        print("Niewłaściwa opcja. Wybierz z dostępnych powyżej.")
+            elif menu_option == '2':
+                while True:
+                    print("0. Powrót do menu głównego")
+                    print("1. Wyświetl listę klientów danej kliniki")
+                    print("2. Dodaj klienta do kliniki")
+                    print("3. Usuń klienta z kliniki")
+                    print("4. Aktualizuj dane klienta")
+                    print("5. Wyświetl lokalizację wszystkich klientów na mapie")
+                    opcja = input("Wybierz opcję: ")
+                    if opcja == '0':
+                        break
+                    elif opcja == '1':
+                        show_clients(clients)
+                    elif opcja == '2':
+                        add_client(clients, companies)
+                    elif opcja == '3':
+                        remove_client(clients, companies)
+                    elif opcja == '4':
+                        update_client(clients, companies)
+                    elif opcja == '5':
+                        clients_map(clients)
+                    else:
+                        print("Niewłaściwa opcja. Wybierz z dostępnych powyżej.")
+            elif menu_option == '3':
+                while True:
+                    print("0. Powrót do menu głównego")
+                    print("1. Wyświetl listę pracowników danej kliniki")
+                    print("2. Dodaj pracownika do kliniki")
+                    print("3. Usuń pracownika z kliniki")
+                    print("4. Aktualizuj dane pracownika")
+                    print("5. Wyświetl lokalizację wszystkich pracowników na mapie")
+                    print("6. Wyświetl liste zwierząt pod opieką pracownika")
+                    opcja = input("Wybierz opcję: ")
+                    if opcja == '0':
+                        break
+                    elif opcja == '1':
+                        show_workers(workers)
+                    elif opcja == '2':
+                        add_worker(workers, companies)
+                    elif opcja == '3':
+                        remove_worker(workers, companies)
+                    elif opcja == '4':
+                        update_worker(workers, companies, )
+                    elif opcja == '5':
+                        workers_map(workers)
+                    elif opcja == '6':
+                        show_animals_under_care(workers, animals)
+                    else:
+                        print("Niewłaściwa opcja. Wybierz z dostępnych powyżej.")
+            print("Dziękujemy za skorzystanie z systemu. Do widzenia!")
